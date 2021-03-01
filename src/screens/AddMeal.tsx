@@ -59,16 +59,21 @@ const ButtonContainer = styled.div`
 
 interface IFormData {
 	name: string
-	ingredients: Array<{ name: string; weight: number; calories: number }>
+	ingredients: Array<{ name: string; weight: string; calories: string }>
 }
 
-const computeCaloriesPer100g = (data: IFormData) =>
+const computeCaloriesPer100g = (ingredients: IFormData['ingredients']) =>
 	Math.round(
-		computeCalories(data) / (data.ingredients.reduce((acc, { weight }) => acc + weight, 0) / 100)
+		computeCalories(ingredients) /
+			(ingredients.reduce((acc, { weight }) => acc + parseInt(weight, 10), 0) / 100)
 	)
 
-const computeCalories = (data: IFormData) =>
-	data.ingredients.reduce((acc: number, { calories }) => acc + calories, 0)
+const computeCalories = (ingredients: IFormData['ingredients']) =>
+	ingredients.reduce(
+		(acc: number, { calories, weight }) =>
+			acc + parseInt(calories, 10) * (parseInt(weight, 10) / 100),
+		0
+	)
 
 export const AddMeal = () => {
 	const { add: addIngredient } = useDatabase<Ingredient>(REFS.ingredient)
@@ -97,7 +102,7 @@ export const AddMeal = () => {
 				mutators={{
 					...arrayMutators,
 				}}
-				initialValues={{ ingredients: [{ name: '', weight: '', calories: '' }] }}
+				// initialValues={{ ingredients: [{ }] }}
 				render={({ handleSubmit, values }) => (
 					<form onSubmit={handleSubmit}>
 						<FieldArray name="ingredients">
@@ -130,20 +135,26 @@ export const AddMeal = () => {
 												<SmallInput
 													label="Weight"
 													name={`${name}.weight`}
+													type="number"
 													required={true}
 													fullWidth={false}
 												/>
 												<SmallInput
 													label="Calories"
 													name={`${name}.calories`}
+													type="number"
 													required={true}
 													fullWidth={false}
 												/>
 											</div>
 										</FieldArrayContainer>
 									))}
-									<div>Total calories : {computeCalories(values)}</div>
-									<div>Calories / 100g : {computeCaloriesPer100g(values)}</div>
+									{values?.ingredients?.length && (
+										<>
+											<div>Total calories : {computeCalories(values.ingredients)}</div>
+											<div>Calories / 100g : {computeCaloriesPer100g(values.ingredients)}</div>
+										</>
+									)}
 									<AddContainer>
 										<Button
 											variant="outlined"

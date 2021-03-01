@@ -1,11 +1,11 @@
 export interface Food {
 	name: string,
-	calories: number
+	calories: string
 }
 
 export interface Ingredient {
 	food: string,
-	weight: number,
+	weight: string,
 }
 
 export interface Meal {
