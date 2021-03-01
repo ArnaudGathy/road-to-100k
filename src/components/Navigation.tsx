@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core'
-import RestoreIcon from '@material-ui/icons/Restore'
-import FavoriteIcon from '@material-ui/icons/Favorite'
-import LocationOnIcon from '@material-ui/icons/LocationOn'
+import FastfoodIcon from '@material-ui/icons/Fastfood'
+import AddIcon from '@material-ui/icons/Add'
+import KitchenIcon from '@material-ui/icons/Kitchen'
 import { useHistory } from 'react-router-dom'
 import { ROUTES } from './Routes'
 import styled from 'styled-components'
@@ -27,17 +27,17 @@ export const Navigation = () => {
 		>
 			<BottomNavigationAction
 				label="Add"
-				icon={<RestoreIcon />}
+				icon={<AddIcon />}
 				onClick={() => history.push(ROUTES.addMeal)}
 			/>
 			<BottomNavigationAction
 				label="Meals"
-				icon={<FavoriteIcon />}
+				icon={<FastfoodIcon />}
 				onClick={() => history.push(ROUTES.meals)}
 			/>
 			<BottomNavigationAction
 				label="Food"
-				icon={<LocationOnIcon />}
+				icon={<KitchenIcon />}
 				onClick={() => history.push(ROUTES.foods)}
 			/>
 		</BottomNav>

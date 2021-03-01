@@ -4,6 +4,12 @@ import { Routes } from './components/Routes'
 import { useAuth } from './hooks/useAuth'
 import { Container } from '@material-ui/core'
 import { Navigation } from './components/Navigation'
+import styled from 'styled-components'
+
+const NewContainer = styled.div`
+	height: 85vh;
+	overflow: auto;
+`
 
 export const App = () => {
 	const [isAuth, setIsAuth] = useState<boolean>(false)
@@ -31,9 +37,11 @@ export const App = () => {
 	return (
 		<BrowserRouter>
 			<Navigation />
-			<Container>
-				<Routes />
-			</Container>
+			<NewContainer>
+				<Container>
+					<Routes />
+				</Container>
+			</NewContainer>
 		</BrowserRouter>
 	)
 }
