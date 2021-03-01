@@ -97,7 +97,7 @@ export const AddMeal = () => {
 				mutators={{
 					...arrayMutators,
 				}}
-				initialValues={{ ingredients: [{ name: 'test', weight: 300, calories: 400 }] }}
+				initialValues={{ ingredients: [{ name: '', weight: '', calories: '' }] }}
 				render={({ handleSubmit, values }) => (
 					<form onSubmit={handleSubmit}>
 						<FieldArray name="ingredients">

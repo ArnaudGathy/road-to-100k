@@ -25,8 +25,7 @@ export const App = () => {
 		})
 	}, [])
 
-	const hello = false
-	if (hello) {
+	if (!isAuth) {
 		return (
 			<Container>
 				Login required <button onClick={login}>Login</button>
