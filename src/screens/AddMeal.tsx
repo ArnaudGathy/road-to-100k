@@ -69,10 +69,12 @@ const computeCaloriesPer100g = (ingredients: IFormData['ingredients']) =>
 	)
 
 const computeCalories = (ingredients: IFormData['ingredients']) =>
-	ingredients.reduce(
-		(acc: number, { calories, weight }) =>
-			acc + parseInt(calories, 10) * (parseInt(weight, 10) / 100),
-		0
+	Math.round(
+		ingredients.reduce(
+			(acc: number, { calories, weight }) =>
+				acc + parseInt(calories, 10) * (parseInt(weight, 10) / 100),
+			0
+		)
 	)
 
 export const AddMeal = () => {
@@ -102,9 +104,14 @@ export const AddMeal = () => {
 				mutators={{
 					...arrayMutators,
 				}}
-				// initialValues={{ ingredients: [{ }] }}
-				render={({ handleSubmit, values }) => (
-					<form onSubmit={handleSubmit}>
+				initialValues={{ ingredients: [{}] }}
+				render={({ handleSubmit, values, form }) => (
+					<form
+						onSubmit={async (event) => {
+							await handleSubmit(event)
+							form.reset()
+						}}
+					>
 						<FieldArray name="ingredients">
 							{({ fields }) => (
 								<>
@@ -140,7 +147,7 @@ export const AddMeal = () => {
 													fullWidth={false}
 												/>
 												<SmallInput
-													label="Calories"
+													label="Calories / 100g"
 													name={`${name}.calories`}
 													type="number"
 													required={true}
@@ -151,13 +158,15 @@ export const AddMeal = () => {
 									))}
 									{values?.ingredients?.length && (
 										<>
-											<div>Total calories : {computeCalories(values.ingredients)}</div>
-											<div>Calories / 100g : {computeCaloriesPer100g(values.ingredients)}</div>
+											<div>Total calories : {computeCalories(values.ingredients) || '...'}</div>
+											<div>
+												Calories / 100g : {computeCaloriesPer100g(values.ingredients) || '...'}
+											</div>
 										</>
 									)}
 									<AddContainer>
 										<Button
-											variant="outlined"
+											variant="contained"
 											color="primary"
 											size="small"
 											startIcon={<AddIcon />}
@@ -165,7 +174,7 @@ export const AddMeal = () => {
 										>
 											Add Ingredient
 										</Button>
-										<Button variant="contained" type="submit" color="primary">
+										<Button variant="outlined" type="submit" color="primary">
 											Add meal
 										</Button>
 									</AddContainer>

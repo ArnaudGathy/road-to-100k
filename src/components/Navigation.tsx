@@ -11,6 +11,8 @@ const BottomNav = styled(BottomNavigation)`
 	position: fixed;
 	bottom: 0;
 	width: 100%;
+	height: 60px;
+	z-index: 10;
 `
 
 export const Navigation = () => {

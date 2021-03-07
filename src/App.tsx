@@ -7,7 +7,7 @@ import { Navigation } from './components/Navigation'
 import styled from 'styled-components'
 
 const NewContainer = styled.div`
-	height: 85vh;
+	height: calc(100vh - 120px);
 	overflow: auto;
 `
 
