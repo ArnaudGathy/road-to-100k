@@ -5,10 +5,10 @@ import { Foods } from '../screens/Foods'
 import { Meals } from '../screens/Meals'
 
 export enum ROUTES {
-	root = "/",
-	addMeal = "/addmeal",
-	meals = "/meals",
-	foods = "/foods"
+	root = '/',
+	addMeal = '/addmeal',
+	meals = '/meals',
+	foods = '/foods',
 }
 
 export const Routes = () => (
