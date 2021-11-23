@@ -1,14 +1,11 @@
 import React from 'react'
-import { Form } from 'react-final-form'
+import { Form, Field } from 'react-final-form'
 import arrayMutators from 'final-form-arrays'
 import { FieldArray } from 'react-final-form-arrays'
-import { TextField } from 'mui-rff'
 import styled from 'styled-components'
-import { Button, IconButton } from '@material-ui/core'
-import AddIcon from '@material-ui/icons/Add'
-import DeleteIcon from '@material-ui/icons/Delete'
 import { REFS, useDatabase } from '../hooks/useDatabase'
 import { Food, Ingredient, Meal } from '../model/model'
+import { sortBy, prop } from 'ramda'
 
 const Title = styled.h1`
 	padding: 16px 0;
@@ -21,24 +18,11 @@ const FieldArrayContainer = styled.div`
 	background-color: rgba(0, 0, 0, 0.05);
 	padding: 16px;
 	border-radius: 16px;
-`
+	position: relative;
 
-const Input = styled(TextField)`
-	.MuiInput-root {
-		margin: 16px 0;
-	}
-`
-
-const MediumInput = styled(Input)`
-	.MuiInput-root {
-		width: 35ch;
-	}
-`
-
-const SmallInput = styled(Input)`
-	.MuiInput-root {
-		width: 18ch;
-		margin-right: 8px;
+	input {
+		margin-top: 6px;
+		margin-right: 30px;
 	}
 `
 
@@ -48,18 +32,49 @@ const AddContainer = styled.div`
 	justify-content: space-between;
 `
 
-const FirstLine = styled.div`
-	display: flex;
+const PlusButton = styled.button`
+	height: 30px;
+	width: 30px;
+	font-size: 20px;
+	background-color: greenyellow;
+	border: 1px solid black;
 	align-items: center;
+	display: flex;
+	justify-content: center;
 `
 
-const ButtonContainer = styled.div`
-	margin-left: 16px;
+const RemoveButton = styled(PlusButton)`
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	border-radius: 20px;
+	background-color: tomato;
 `
 
+const SuggestionList = styled.div`
+	ul {
+		list-style-type: none;
+		border: 1px solid black;
+	}
+
+	li {
+		padding: 4px 0;
+		background-color: #fafafa;
+	}
+
+	li:nth-of-type(2n) {
+		background-color: #f1f1f1;
+	}
+`
+
+interface IIngredient {
+	name: string
+	weight: string
+	calories: string
+}
 interface IFormData {
 	name: string
-	ingredients: Array<{ name: string; weight: string; calories: string }>
+	ingredients: Array<IIngredient>
 }
 
 const computeCaloriesPer100g = (ingredients: IFormData['ingredients']) =>
@@ -77,9 +92,16 @@ const computeCalories = (ingredients: IFormData['ingredients']) =>
 		)
 	)
 
+const trimString = (val: string) =>
+	val
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.trim()
+		.toLowerCase()
+
 export const AddMeal = () => {
 	const { add: addIngredient } = useDatabase<Ingredient>(REFS.ingredient)
-	const { add: addFood } = useDatabase<Food>(REFS.food)
+	const { add: addFood, entitiesArray: foodList } = useDatabase<Food>(REFS.food)
 	const { add: addMeal } = useDatabase<Meal>(REFS.meals)
 
 	const onSubmit = async (data: IFormData) => {
@@ -94,6 +116,50 @@ export const AddMeal = () => {
 		)
 
 		await addMeal({ name: data.name, ingredients: ingredientsIds })
+	}
+
+	const getSuggestions = (value: string) => {
+		if (!value) {
+			return []
+		}
+
+		const inputValue = trimString(value)
+		const inputLength = inputValue.length
+
+		return inputLength === 0
+			? []
+			: sortBy(
+					prop('name'),
+					foodList.filter((food) => trimString(food.name).includes(inputValue))
+			  )
+	}
+
+	const renderSuggestions = (
+		fieldValue: string,
+		index: number,
+		updateFunc: (index: number, newValue: IIngredient) => void
+	) => {
+		const updateFormValue = (newValue: Food) => {
+			updateFunc(index, { name: newValue.name, calories: newValue.calories, weight: '' })
+		}
+
+		const suggestions = getSuggestions(fieldValue)
+		const hasPerfectMatch =
+			suggestions.length === 1 && trimString(fieldValue) === trimString(suggestions[0].name)
+
+		if (!suggestions.length || hasPerfectMatch) {
+			return null
+		} else {
+			return (
+				<ul>
+					{suggestions.map((suggest) => (
+						<li key={suggest.uid} onClick={() => updateFormValue(suggest)}>
+							{suggest.name}
+						</li>
+					))}
+				</ul>
+			)
+		}
 	}
 
 	return (
@@ -115,48 +181,35 @@ export const AddMeal = () => {
 						<FieldArray name="ingredients">
 							{({ fields }) => (
 								<>
-									<Input label="Meal name" name="name" required={true} />
+									<input name="name" placeholder="Meal name" />
 									{fields.map((name, index) => (
 										<FieldArrayContainer key={name}>
-											<FirstLine>
-												<MediumInput
-													label="Name"
-													name={`${name}.name`}
-													required={true}
-													fullWidth={false}
-												/>
-												<ButtonContainer>
-													<IconButton
-														aria-label="delete"
-														color="secondary"
-														size="small"
-														onClick={() => {
-															fields.remove(index)
-														}}
-													>
-														<DeleteIcon />
-													</IconButton>
-												</ButtonContainer>
-											</FirstLine>
-											<div>
-												<SmallInput
-													label="Weight"
-													name={`${name}.weight`}
-													type="number"
-													required={true}
-													fullWidth={false}
-												/>
-												<SmallInput
-													label="Calories / 100g"
-													name={`${name}.calories`}
-													type="number"
-													required={true}
-													fullWidth={false}
-												/>
-											</div>
+											<Field component="input" name={`${name}.name`} placeholder="name" />
+											<SuggestionList>
+												{renderSuggestions(values?.ingredients[index].name, index, fields.update)}
+											</SuggestionList>
+											<Field
+												component="input"
+												name={`${name}.weight`}
+												placeholder="weight"
+												type="number"
+											/>
+											<Field
+												component="input"
+												name={`${name}.calories`}
+												placeholder="calories"
+												type="number"
+											/>
+											<RemoveButton
+												onClick={() => {
+													fields.remove(index)
+												}}
+											>
+												-
+											</RemoveButton>
 										</FieldArrayContainer>
 									))}
-									{values?.ingredients?.length && (
+									{!!values?.ingredients?.length && (
 										<>
 											<div>Total calories : {computeCalories(values.ingredients) || '...'}</div>
 											<div>
@@ -165,18 +218,13 @@ export const AddMeal = () => {
 										</>
 									)}
 									<AddContainer>
-										<Button
-											variant="contained"
-											color="primary"
-											size="small"
-											startIcon={<AddIcon />}
+										<PlusButton
+											type="button"
 											onClick={() => fields.push({ name: '', weight: '', calories: '' })}
 										>
-											Add Ingredient
-										</Button>
-										<Button variant="outlined" type="submit" color="primary">
-											Add meal
-										</Button>
+											+
+										</PlusButton>
+										<button type="submit">Add meal</button>
 									</AddContainer>
 								</>
 							)}
