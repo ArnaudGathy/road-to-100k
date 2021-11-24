@@ -3,7 +3,7 @@ import { Form, Field } from 'react-final-form'
 import arrayMutators from 'final-form-arrays'
 import { FieldArray } from 'react-final-form-arrays'
 import styled from 'styled-components'
-import { REFS, useDatabase } from '../hooks/useDatabase'
+import { IEntityWithID, REFS, useDatabase } from '../hooks/useDatabase'
 import { Food, Ingredient, Meal } from '../model/model'
 import { sortBy, prop } from 'ramda'
 
@@ -52,13 +52,16 @@ const RemoveButton = styled(PlusButton)`
 `
 
 const SuggestionList = styled.div`
+	position: absolute;
+	top: 42px;
+
 	ul {
 		list-style-type: none;
 		border: 1px solid black;
 	}
 
 	li {
-		padding: 4px 0;
+		padding: 4px 2px;
 		background-color: #fafafa;
 	}
 
@@ -71,6 +74,7 @@ interface IIngredient {
 	name: string
 	weight: string
 	calories: string
+	uid?: string
 }
 interface IFormData {
 	name: string
@@ -108,9 +112,13 @@ export const AddMeal = () => {
 		const { ingredients } = data
 
 		const ingredientsIds = await Promise.all(
-			ingredients.map(async ({ name, calories, weight }) => {
-				const foodResponse = await addFood({ name, calories })
-				const ingredientResponse = await addIngredient({ food: foodResponse.key ?? '', weight })
+			ingredients.map(async ({ name, calories, weight, uid }) => {
+				let foodUid = uid ?? null
+				if (!uid) {
+					foodUid = (await addFood({ name, calories })).key
+				}
+
+				const ingredientResponse = await addIngredient({ food: foodUid ?? '', weight })
 				return ingredientResponse.key ?? ''
 			})
 		)
@@ -139,8 +147,13 @@ export const AddMeal = () => {
 		index: number,
 		updateFunc: (index: number, newValue: IIngredient) => void
 	) => {
-		const updateFormValue = (newValue: Food) => {
-			updateFunc(index, { name: newValue.name, calories: newValue.calories, weight: '' })
+		const updateFormValue = (newValue: IEntityWithID<Food>) => {
+			updateFunc(index, {
+				name: newValue.name,
+				calories: newValue.calories,
+				uid: newValue.uid,
+				weight: '',
+			})
 		}
 
 		const suggestions = getSuggestions(fieldValue)
@@ -177,11 +190,12 @@ export const AddMeal = () => {
 							await handleSubmit(event)
 							form.reset()
 						}}
+						autoComplete="off"
 					>
 						<FieldArray name="ingredients">
 							{({ fields }) => (
 								<>
-									<input name="name" placeholder="Meal name" />
+									<Field component="input" name="name" placeholder="Meal name" />
 									{fields.map((name, index) => (
 										<FieldArrayContainer key={name}>
 											<Field component="input" name={`${name}.name`} placeholder="name" />

@@ -5,7 +5,7 @@ interface IEntities<T> {
 	[key: string]: T
 }
 
-type IEntityWithID<T> = T & { uid: string }
+export type IEntityWithID<T> = T & { uid: string }
 
 export enum REFS {
 	food = '/foods',
@@ -13,7 +13,7 @@ export enum REFS {
 	meals = '/meals',
 }
 
-const objectToArray = function <T>(entities: IEntities<T>) {
+const objectToArray = function <T>(entities: IEntities<T>): Array<IEntityWithID<T>> {
 	return Object.entries(entities).reduce(
 		(acc: Array<IEntityWithID<T>>, [key, value]): Array<IEntityWithID<T>> => [
 			...acc,
